@@ -21,6 +21,17 @@ class AuthProvider extends ChangeNotifier {
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isLoading => _status == AuthStatus.loading;
 
+  bool get isAdmin =>
+      _user?.roles.any((r) => r.name.toLowerCase() == 'administrator') ?? false;
+
+  bool hasPermission(String permission) {
+    if (_user == null) return false;
+    if (isAdmin) return true;
+    // roles.permissions sudah di-load dari API saat login/profile
+    return _user!.roles
+        .any((r) => r.permissions.any((p) => p.name == permission));
+  }
+
   Future<void> checkAuth() async {
     _status = AuthStatus.loading;
     notifyListeners();
@@ -61,6 +72,12 @@ class AuthProvider extends ChangeNotifier {
     _status = AuthStatus.unauthenticated;
     notifyListeners();
     return false;
+  }
+
+  Future<String?> changePassword(
+      String currentPassword, String newPassword) async {
+    final res = await _repo.changePassword(currentPassword, newPassword);
+    return res.success ? null : res.message;
   }
 
   Future<void> logout() async {

@@ -33,10 +33,22 @@ class PermissionProvider extends ChangeNotifier {
     final labelRes = results[0] as dynamic;
     final groupRes = results[1] as dynamic;
 
-    if (labelRes.success) _labels = labelRes.data ?? [];
-    if (groupRes.success) _groups = groupRes.data ?? [];
+    if (labelRes.success && labelRes.data != null) {
+      final List<PermissionLabelModel> rawLabels = labelRes.data;
+      final enriched = await Future.wait(
+        rawLabels.map((label) async {
+          final detail = await _permRepo.getById(label.id);
+          return (detail.success && detail.data != null)
+              ? detail.data!
+              : label;
+        }),
+      );
+      _labels = enriched;
+    } else {
+      _error = labelRes.message;
+    }
 
-    if (!labelRes.success) _error = labelRes.message;
+    if (groupRes.success) _groups = groupRes.data ?? [];
 
     _isLoading = false;
     notifyListeners();

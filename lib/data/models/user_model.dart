@@ -21,6 +21,11 @@ class UserModel {
     this.roles = const [],
   });
 
+  bool get isActive {
+    final s = status?.toLowerCase();
+    return s != '0' && s != 'false' && s != 'inactive';
+  }
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] as int,

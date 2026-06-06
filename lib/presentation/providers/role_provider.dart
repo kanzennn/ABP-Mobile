@@ -22,7 +22,18 @@ class RoleProvider extends ChangeNotifier {
 
     final res = await _repo.getAll();
     if (res.success && res.data != null) {
-      _roles = res.data!;
+      final enriched = await Future.wait(
+        res.data!.map((role) async {
+          final detail = await _repo.getById(role.id);
+          if (detail.success && detail.data != null) {
+            final roleData =
+                detail.data!['role'] as Map<String, dynamic>?;
+            if (roleData != null) return RoleModel.fromJson(roleData);
+          }
+          return role;
+        }),
+      );
+      _roles = enriched;
     } else {
       _error = res.message;
     }

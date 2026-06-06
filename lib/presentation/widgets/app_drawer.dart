@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../screens/main_screen.dart';
 
 class AppDrawer extends StatelessWidget {
+  final List<MenuEntry> entries;
   final int selectedIndex;
   final Function(int) onItemSelected;
 
   const AppDrawer({
     super.key,
+    required this.entries,
     required this.selectedIndex,
     required this.onItemSelected,
   });
@@ -41,38 +44,36 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
           ),
-          _DrawerItem(
-            icon: Icons.dashboard,
-            title: 'Dashboard',
-            isSelected: selectedIndex == 0,
-            onTap: () => onItemSelected(0),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                ...entries
+                    .where((e) => e.title != 'Profil Saya')
+                    .toList()
+                    .asMap()
+                    .entries
+                    .map((entry) => _DrawerItem(
+                          icon: entry.value.icon,
+                          title: entry.value.title,
+                          isSelected: selectedIndex == entry.key,
+                          onTap: () => onItemSelected(entry.key),
+                        )),
+                const Divider(),
+                Builder(builder: (ctx) {
+                  final profileIdx =
+                      entries.indexWhere((e) => e.title == 'Profil Saya');
+                  return _DrawerItem(
+                    icon: Icons.person_outline,
+                    title: 'Profil Saya',
+                    isSelected: profileIdx != -1 && selectedIndex == profileIdx,
+                    onTap: () =>
+                        profileIdx != -1 ? onItemSelected(profileIdx) : null,
+                  );
+                }),
+              ],
+            ),
           ),
-          _DrawerItem(
-            icon: Icons.people,
-            title: 'Users',
-            isSelected: selectedIndex == 1,
-            onTap: () => onItemSelected(1),
-          ),
-          _DrawerItem(
-            icon: Icons.admin_panel_settings,
-            title: 'Roles',
-            isSelected: selectedIndex == 2,
-            onTap: () => onItemSelected(2),
-          ),
-          _DrawerItem(
-            icon: Icons.security,
-            title: 'Permissions',
-            isSelected: selectedIndex == 3,
-            onTap: () => onItemSelected(3),
-          ),
-          _DrawerItem(
-            icon: Icons.folder_special,
-            title: 'Permission Groups',
-            isSelected: selectedIndex == 4,
-            onTap: () => onItemSelected(4),
-          ),
-          const Divider(),
-          const Spacer(),
           _DrawerItem(
             icon: Icons.logout,
             title: 'Logout',
@@ -94,7 +95,7 @@ class _DrawerItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final bool isSelected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Color? iconColor;
 
   const _DrawerItem({

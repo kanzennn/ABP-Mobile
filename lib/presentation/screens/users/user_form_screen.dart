@@ -18,9 +18,11 @@ class _UserFormScreenState extends State<UserFormScreen> {
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
   List<int> _selectedRoleIds = [];
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   bool get isEditing => widget.user != null;
 
@@ -39,6 +41,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
     super.dispose();
   }
 
@@ -53,6 +56,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
     };
     if (_passwordCtrl.text.isNotEmpty) {
       data['password'] = _passwordCtrl.text;
+      data['password_confirmation'] = _confirmPasswordCtrl.text;
     }
 
     bool success;
@@ -154,10 +158,39 @@ class _UserFormScreenState extends State<UserFormScreen> {
                           if (!isEditing && (v == null || v.isEmpty)) {
                             return 'Password wajib diisi';
                           }
-                          if (v != null &&
-                              v.isNotEmpty &&
-                              v.length < 6) {
+                          if (v != null && v.isNotEmpty && v.length < 6) {
                             return 'Password minimal 6 karakter';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _confirmPasswordCtrl,
+                        obscureText: _obscureConfirmPassword,
+                        decoration: InputDecoration(
+                          labelText: isEditing
+                              ? 'Konfirmasi password baru'
+                              : 'Konfirmasi Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscureConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility),
+                            onPressed: () => setState(() =>
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword),
+                          ),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                        validator: (v) {
+                          if (_passwordCtrl.text.isEmpty) return null;
+                          if (v == null || v.isEmpty) {
+                            return 'Konfirmasi password wajib diisi';
+                          }
+                          if (v != _passwordCtrl.text) {
+                            return 'Password tidak cocok';
                           }
                           return null;
                         },

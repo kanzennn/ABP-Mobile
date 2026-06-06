@@ -17,7 +17,7 @@ class _PermissionGroupListScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PermissionProvider>().fetchGroups();
+      context.read<PermissionProvider>().fetchAll();
     });
   }
 
@@ -53,7 +53,6 @@ class _PermissionGroupListScreenState
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
               Navigator.pop(ctx);
-
               bool success;
               if (group == null) {
                 success = await context
@@ -64,7 +63,6 @@ class _PermissionGroupListScreenState
                     .read<PermissionProvider>()
                     .updateGroup(group.id, ctrl.text.trim());
               }
-
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(success
@@ -99,16 +97,15 @@ class _PermissionGroupListScreenState
       ),
     );
     if (confirm == true && mounted) {
-      final success =
-          await context.read<PermissionProvider>().deleteGroup(group.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(success
-              ? 'Group berhasil dihapus'
-              : 'Gagal menghapus group'),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ));
-      }
+      final provider = context.read<PermissionProvider>();
+      final messenger = ScaffoldMessenger.of(context);
+      final success = await provider.deleteGroup(group.id);
+      messenger.showSnackBar(SnackBar(
+        content: Text(success
+            ? 'Group berhasil dihapus'
+            : 'Gagal menghapus group'),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ));
     }
   }
 
@@ -125,45 +122,78 @@ class _PermissionGroupListScreenState
               child: provider.groups.isEmpty
                   ? const Center(child: Text('Belum ada permission group'))
                   : ListView.separated(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
                       itemCount: provider.groups.length,
-                      separatorBuilder: (_, index) =>
+                      separatorBuilder: (context, index) =>
                           const SizedBox(height: 8),
-                      itemBuilder: (ctx, i) {
+                      itemBuilder: (_, i) {
                         final group = provider.groups[i];
+                        // Hitung jumlah label (bukan individual permission)
+                        final totalLabels = provider.labels
+                            .where((l) => l.permissionGroupId == group.id)
+                            .length;
                         return Card(
-                          elevation: 2,
+                          elevation: 1,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
-                          child: ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE67C13)
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(Icons.folder_special,
-                                  color: Color(0xFFE67C13)),
-                            ),
-                            title: Text(group.name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
-                            trailing: PopupMenuButton<String>(
-                              onSelected: (v) {
-                                if (v == 'edit') {
-                                  _showGroupDialog(group: group);
-                                }
-                                if (v == 'delete') _deleteGroup(group);
-                              },
-                              itemBuilder: (_) => [
-                                const PopupMenuItem(
-                                    value: 'edit', child: Text('Edit')),
-                                const PopupMenuItem(
-                                    value: 'delete',
-                                    child: Text('Hapus',
-                                        style:
-                                            TextStyle(color: Colors.red))),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE67C13)
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(Icons.folder_special,
+                                      color: Color(0xFFE67C13), size: 22),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(group.name,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14)),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE67C13)
+                                              .withValues(alpha: 0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '$totalLabels permission',
+                                          style: const TextStyle(
+                                              fontSize: 11,
+                                              color: Color(0xFFE67C13),
+                                              fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                _AksiButton(
+                                  icon: Icons.edit_outlined,
+                                  color: Colors.orange,
+                                  tooltip: 'Edit',
+                                  onTap: () => _showGroupDialog(group: group),
+                                ),
+                                _AksiButton(
+                                  icon: Icons.delete_outline,
+                                  color: Colors.red,
+                                  tooltip: 'Hapus',
+                                  onTap: () => _deleteGroup(group),
+                                ),
                               ],
                             ),
                           ),
@@ -177,6 +207,34 @@ class _PermissionGroupListScreenState
         label: const Text('Tambah Group'),
         backgroundColor: const Color(0xFF1565C0),
         foregroundColor: Colors.white,
+      ),
+    );
+  }
+}
+
+class _AksiButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _AksiButton(
+      {required this.icon,
+      required this.color,
+      required this.tooltip,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Icon(icon, color: color, size: 20),
+        ),
       ),
     );
   }
