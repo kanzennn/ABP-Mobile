@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'MSME Admin',
+                    'MSME',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,

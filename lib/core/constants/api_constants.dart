@@ -6,10 +6,4 @@ class ApiConstants {
   static const String login = '/auth/login';
   static const String logout = '/auth/logout';
   static const String profile = '/auth/profile';
-  static const String changePassword = '/auth/change-password';
-
-  static const String users = '/users';
-  static const String roles = '/roles';
-  static const String permissions = '/permissions';
-  static const String permissionGroups = '/permission-groups';
 }

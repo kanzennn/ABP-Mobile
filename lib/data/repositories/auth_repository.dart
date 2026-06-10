@@ -57,10 +57,8 @@ class AuthRepository {
   Future<ApiResponse<void>> changePassword(
       String currentPassword, String newPassword) async {
     try {
-      final res = await _dio.post(ApiConstants.changePassword, data: {
-        'current_password': currentPassword,
-        'new_password': newPassword,
-        'new_password_confirmation': newPassword,
+      final res = await _dio.put(ApiConstants.profile, data: {
+        'password': newPassword,
       });
       return ApiResponse.fromJson(res.data as Map<String, dynamic>, null);
     } on DioException catch (e) {

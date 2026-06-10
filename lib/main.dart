@@ -2,14 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/storage/secure_storage.dart';
 import 'data/repositories/auth_repository.dart';
-import 'data/repositories/user_repository.dart';
-import 'data/repositories/role_repository.dart';
-import 'data/repositories/permission_repository.dart';
-import 'data/repositories/permission_group_repository.dart';
 import 'presentation/providers/auth_provider.dart';
-import 'presentation/providers/user_provider.dart';
-import 'presentation/providers/role_provider.dart';
-import 'presentation/providers/permission_provider.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/main_screen.dart';
 
@@ -28,18 +21,6 @@ class MsmeApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (_) => AuthProvider(AuthRepository(storage), storage),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => UserProvider(UserRepository(storage)),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => RoleProvider(RoleRepository(storage)),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => PermissionProvider(
-            PermissionRepository(storage),
-            PermissionGroupRepository(storage),
-          ),
         ),
       ],
       child: MaterialApp(
