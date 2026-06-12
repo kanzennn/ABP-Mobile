@@ -12,6 +12,7 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.initial;
   UserModel? _user;
   String? _error;
+  bool _isLoggingIn = false;
 
   AuthProvider(this._repo, this._storage);
 
@@ -19,10 +20,26 @@ class AuthProvider extends ChangeNotifier {
   UserModel? get user => _user;
   String? get error => _error;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
-  bool get isLoading => _status == AuthStatus.loading;
+  bool get isLoading => _isLoggingIn;
 
   bool get isAdmin =>
       _user?.roles.any((r) => r.name.toLowerCase() == 'administrator') ?? false;
+
+  bool get isLogistik => !_hasAdminPermissions(_user);
+
+  bool _hasAdminPermissions(UserModel? user) {
+    if (user == null) return false;
+    const adminPerms = {
+      'user-view', 'role-view', 'permission-view', 'permissiongroup-view',
+    };
+    final userPerms = user.roles
+        .expand((r) => r.permissions)
+        .map((p) => p.name)
+        .toSet();
+    return adminPerms.any((p) => userPerms.contains(p));
+  }
+
+  bool _isAllowedRole(UserModel user) => !_hasAdminPermissions(user);
 
   bool hasPermission(String permission) {
     if (_user == null) return false;
@@ -44,7 +61,7 @@ class AuthProvider extends ChangeNotifier {
     }
 
     final res = await _repo.getProfile();
-    if (res.success && res.data != null) {
+    if (res.success && res.data != null && _isAllowedRole(res.data!)) {
       _user = res.data;
       _status = AuthStatus.authenticated;
     } else {
@@ -55,12 +72,19 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<bool> login(String email, String password) async {
-    _status = AuthStatus.loading;
+    _isLoggingIn = true;
     _error = null;
     notifyListeners();
 
     final res = await _repo.login(email, password);
+    _isLoggingIn = false;
+
     if (res.success && res.data != null) {
+      if (!_isAllowedRole(res.data!.user)) {
+        _error = 'Akses ditolak. Aplikasi ini hanya untuk pengguna Logistik.';
+        notifyListeners();
+        return false;
+      }
       await _storage.saveToken(res.data!.accessToken);
       _user = res.data!.user;
       _status = AuthStatus.authenticated;
@@ -69,7 +93,6 @@ class AuthProvider extends ChangeNotifier {
     }
 
     _error = res.message;
-    _status = AuthStatus.unauthenticated;
     notifyListeners();
     return false;
   }

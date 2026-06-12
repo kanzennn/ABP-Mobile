@@ -58,6 +58,7 @@ class AuthRepository {
       String currentPassword, String newPassword) async {
     try {
       final res = await _dio.put(ApiConstants.profile, data: {
+        'current_password': currentPassword,
         'password': newPassword,
       });
       return ApiResponse.fromJson(res.data as Map<String, dynamic>, null);

@@ -300,16 +300,18 @@ class _InfoRow extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: const Color(0xFF1565C0)),
         const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
-            const SizedBox(height: 2),
-            Text(value,
-                style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w500)),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+              const SizedBox(height: 2),
+              Text(value,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w500)),
+            ],
+          ),
         ),
       ],
     );

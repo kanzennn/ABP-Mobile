@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(auth.error ?? 'Login gagal'),
+          content: Text(auth.error ?? 'Login gagal, Email atau Sandi salah'),
           backgroundColor: Colors.red.shade700,
         ),
       );
